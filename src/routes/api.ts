@@ -7,7 +7,14 @@ import {
   parkHours,
   ticketProducts,
 } from '../data/mockData';
-import { DashboardSummary, DiningLocation, EventListing, HotelQuote, TicketQuote } from '../types';
+import {
+  CrowdCalendarEntry,
+  DashboardSummary,
+  DiningLocation,
+  EventListing,
+  HotelQuote,
+  TicketQuote,
+} from '../types';
 
 const router = Router();
 
@@ -142,6 +149,41 @@ router.get('/events', (req, res) => {
   });
 
   res.json({ events });
+});
+
+router.get('/crowd-calendar', (_req, res) => {
+  const entries: CrowdCalendarEntry[] = parkHours.map((hour) => {
+    let level = 4;
+    const rationale: string[] = [];
+
+    const closeHour = Number(hour.closes.split(':')[0]);
+    if (closeHour >= 22) {
+      level += 2;
+      rationale.push('Late closing suggests higher demand');
+    }
+
+    if (hour.earlyParkAdmission) {
+      level += 1;
+      rationale.push('Early Park Admission scheduled');
+    }
+
+    if (hour.specialEvent) {
+      level += 2;
+      rationale.push(`Special event: ${hour.specialEvent}`);
+    }
+
+    level = Math.min(10, level);
+
+    return {
+      id: `${hour.park}-${hour.date}`,
+      park: hour.park,
+      date: hour.date,
+      crowdLevel: level,
+      rationale,
+    };
+  });
+
+  res.json({ crowdCalendar: entries });
 });
 
 export default router;

@@ -5,6 +5,9 @@ const expressEl = document.getElementById('express');
 const hoursEl = document.getElementById('hours');
 const diningEl = document.getElementById('dining');
 const eventsEl = document.getElementById('events');
+const crowdEl = document.getElementById('crowd');
+const tabs = Array.from(document.querySelectorAll('.tab'));
+const panels = Array.from(document.querySelectorAll('.tab-panel'));
 
 const input = (id) => document.getElementById(id);
 
@@ -148,6 +151,22 @@ const renderEvents = (events) => {
   });
 };
 
+const renderCrowd = (entries) => {
+  crowdEl.innerHTML = '';
+  entries.forEach((entry) => {
+    const card = document.createElement('div');
+    card.className = 'crowd';
+    const bars = new Array(entry.crowdLevel).fill('▮').join('');
+    card.innerHTML = `
+      <div class="pill">${entry.park}</div>
+      <h3>${entry.date}</h3>
+      <p class="crowd__bars" aria-label="Crowd level ${entry.crowdLevel} out of 10">${bars}</p>
+      <p class="muted">${entry.rationale.join(' · ') || 'Standard operating day'}</p>
+    `;
+    crowdEl.appendChild(card);
+  });
+};
+
 const refresh = async () => {
   const days = Number(input('filter-days').value) || 1;
   const adults = Number(input('filter-adults').value) || 1;
@@ -155,7 +174,7 @@ const refresh = async () => {
   const nights = Number(input('filter-nights').value) || 1;
   const guests = Number(input('filter-guests').value) || 1;
 
-  const [summaryResp, ticketsResp, hotelsResp, expressResp, hoursResp, diningResp, eventsResp] = await Promise.all([
+  const [summaryResp, ticketsResp, hotelsResp, expressResp, hoursResp, diningResp, eventsResp, crowdResp] = await Promise.all([
     fetchJSON('/api/summary'),
     fetchJSON(`/api/tickets?days=${days}&adults=${adults}&children=${children}`),
     fetchJSON(`/api/hotels?nights=${nights}&guests=${guests}`),
@@ -163,6 +182,7 @@ const refresh = async () => {
     fetchJSON('/api/park-hours'),
     fetchJSON('/api/dining'),
     fetchJSON('/api/events'),
+    fetchJSON('/api/crowd-calendar'),
   ]);
 
   renderSummary(summaryResp.summary);
@@ -172,7 +192,16 @@ const refresh = async () => {
   renderHours(hoursResp.parkHours);
   renderDining(diningResp.dining);
   renderEvents(eventsResp.events);
+  renderCrowd(crowdResp.crowdCalendar);
 };
+
+tabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.target;
+    tabs.forEach((btn) => btn.classList.toggle('active', btn === tab));
+    panels.forEach((panel) => panel.classList.toggle('active', panel.id === target));
+  });
+});
 
 const button = document.getElementById('refresh');
 button.addEventListener('click', () => {

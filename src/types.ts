@@ -84,3 +84,11 @@ export interface DashboardSummary {
   diningCount: number;
   eventCount: number;
 }
+
+export interface CrowdCalendarEntry {
+  id: string;
+  park: string;
+  date: string;
+  crowdLevel: number;
+  rationale: string[];
+}

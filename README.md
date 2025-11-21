@@ -2,7 +2,7 @@
 
 Universal Planner Pro is a custom API that scrapes Universal Orlando’s public website and normalizes the data into a clean JSON API. It is the backend for a dashboard that surfaces park ticket pricing, attraction metadata, dining information, and park hours in one place.
 
-This repo now includes a live, browser-based dashboard that sits on top of the API. Launch it and you will see park ticket quotes, hotel totals, Express pass options, park hours, dining callouts, and marquee events with beautiful presentation and live filter controls.
+This repo now includes a live, browser-based dashboard that sits on top of the API. Launch it and you will see park ticket quotes, hotel totals, Express pass options, park hours, dining callouts, marquee events, and a crowd calendar with beautiful presentation and live filter controls.
 
 ## Features
 - Ticket & Express dynamic daily pricing
@@ -60,5 +60,6 @@ See `/docs` for detailed architecture, schema, endpoint map, and scraper instruc
 - `GET /api/park-hours` — operating hours with early admission flag and events
 - `GET /api/dining` — dining list with cuisine, meal, reservation tips
 - `GET /api/events` — headline and seasonal events
+- `GET /api/crowd-calendar` — derived crowd levels using park hours and special events
 
 Hit the root path `/` to explore the full UI with filterable sections and pricing cards.
