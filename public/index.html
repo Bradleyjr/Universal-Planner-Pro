@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Universal Planner Pro</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__content">
+        <p class="badge">LIVE DATA SANDBOX</p>
+        <h1>Universal Planner Pro</h1>
+        <p class="subtitle">
+          Explore tickets, hotels, Express passes, dining, park hours, and events from one beautiful dashboard.
+        </p>
+        <div class="filters">
+          <label>
+            Days
+            <input id="filter-days" type="number" value="2" min="1" />
+          </label>
+          <label>
+            Adults
+            <input id="filter-adults" type="number" value="2" min="1" />
+          </label>
+          <label>
+            Children
+            <input id="filter-children" type="number" value="0" min="0" />
+          </label>
+          <label>
+            Nights (hotels)
+            <input id="filter-nights" type="number" value="2" min="1" />
+          </label>
+          <label>
+            Guests (hotels)
+            <input id="filter-guests" type="number" value="2" min="1" />
+          </label>
+          <button id="refresh" class="button">Refresh Live Data</button>
+        </div>
+        <p class="note">
+          Dynamic pricing uses sample data that mirrors real-world ranges. Adjust filters and hit refresh to recompute.
+        </p>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card" id="summary-card">
+        <div class="card__header">
+          <h2>Inventory Snapshot</h2>
+          <span class="pill">Live</span>
+        </div>
+        <div class="summary" id="summary"></div>
+      </section>
+
+      <section class="card">
+        <div class="card__header">
+          <h2>Tickets</h2>
+          <span class="pill pill--accent">Parks</span>
+        </div>
+        <div class="card__body" id="tickets"></div>
+      </section>
+
+      <section class="card">
+        <div class="card__header">
+          <h2>Hotels</h2>
+          <span class="pill pill--accent">Resorts</span>
+        </div>
+        <div class="card__body" id="hotels"></div>
+      </section>
+
+      <section class="card">
+        <div class="card__header">
+          <h2>Express</h2>
+          <span class="pill">Speed</span>
+        </div>
+        <div class="card__body" id="express"></div>
+      </section>
+
+      <section class="card">
+        <div class="card__header">
+          <h2>Park Hours</h2>
+          <span class="pill">Operations</span>
+        </div>
+        <div class="card__body" id="hours"></div>
+      </section>
+
+      <section class="card">
+        <div class="card__header">
+          <h2>Dining</h2>
+          <span class="pill">Food</span>
+        </div>
+        <div class="card__body" id="dining"></div>
+      </section>
+
+      <section class="card">
+        <div class="card__header">
+          <h2>Events</h2>
+          <span class="pill">Special</span>
+        </div>
+        <div class="card__body" id="events"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Universal Planner Pro • Experience-ready dashboard with mock live pricing.</p>
+    </footer>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
