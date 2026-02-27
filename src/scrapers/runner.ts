@@ -4,6 +4,8 @@ import { scrapeTickets } from "./tickets";
 import { scrapeAttractions } from "./attractions";
 import { scrapeDiningData } from "./dining";
 import { scrapeHours } from "./hours";
+import { scrapeHotels } from "./hotels";
+import { scrapeEvents } from "./events";
 import pino from "pino";
 
 const logger = pino({ name: "scrape-runner" });
@@ -57,6 +59,8 @@ async function main() {
   results.push(await runScraper("attractions", scrapeAttractions));
   results.push(await runScraper("dining", scrapeDiningData));
   results.push(await runScraper("hours", scrapeHours));
+  results.push(await runScraper("hotels", scrapeHotels));
+  results.push(await runScraper("events", scrapeEvents));
 
   // Clean up browser if Playwright was used
   await closeBrowser();
