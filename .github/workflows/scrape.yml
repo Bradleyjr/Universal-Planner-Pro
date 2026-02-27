@@ -1,0 +1,35 @@
+name: Daily Scrape
+
+on:
+  schedule:
+    - cron: "0 11 * * *" # 6 AM EST (11 UTC) daily
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - run: pnpm install
+
+      - run: pnpm exec playwright install chromium --with-deps
+
+      - run: pnpm scrape
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "::warning::Scrape job failed! Check logs."
