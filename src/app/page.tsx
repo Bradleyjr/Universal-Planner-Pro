@@ -69,9 +69,9 @@ const sections = [
 ];
 
 const parks = [
-  { name: "Islands of Adventure", color: "border-green-500" },
-  { name: "Universal Studios Florida", color: "border-blue-500" },
-  { name: "Epic Universe", color: "border-purple-500" },
+  { id: "ioa", name: "Islands of Adventure", color: "border-green-500" },
+  { id: "usf", name: "Universal Studios Florida", color: "border-blue-500" },
+  { id: "epic", name: "Epic Universe", color: "border-purple-500" },
 ];
 
 export default function Home() {
@@ -102,19 +102,19 @@ export default function Home() {
             <CardContent>
               <div className="flex gap-2">
                 <Link
-                  href="/hours"
+                  href={`/hours?park=${park.id}`}
                   className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                 >
                   Hours
                 </Link>
                 <Link
-                  href="/wait-times"
+                  href={`/wait-times?park=${park.id}`}
                   className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                 >
                   Wait Times
                 </Link>
                 <Link
-                  href="/attractions"
+                  href={`/attractions?park=${park.id}`}
                   className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                 >
                   Attractions

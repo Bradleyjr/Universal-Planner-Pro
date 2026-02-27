@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ParkSelector, type ParkId } from "@/components/park-selector";
 import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface ParkHourEntry {
   id: number;
@@ -28,6 +29,12 @@ const PARK_NAMES: Record<string, string> = {
   usf: "Universal Studios",
   ioa: "Islands of Adventure",
   epic: "Epic Universe",
+};
+
+const PARK_ABBREVS: Record<string, string> = {
+  usf: "USF",
+  ioa: "IOA",
+  epic: "EU",
 };
 
 const PARK_COLORS: Record<string, string> = {
@@ -62,7 +69,10 @@ function dateKey(d: Date): string {
 }
 
 export default function Client() {
-  const [selectedPark, setSelectedPark] = useState<ParkId>("all");
+  const searchParams = useSearchParams();
+  const [selectedPark, setSelectedPark] = useState<ParkId>(
+    () => (searchParams.get("park") as ParkId) || "all"
+  );
   const [hours, setHours] = useState<ParkHourEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -171,7 +181,8 @@ export default function Client() {
               </div>
             </div>
           ) : (
-            <>
+            <div className="-mx-2 overflow-x-auto px-2 sm:mx-0 sm:px-0">
+              <div className="min-w-[600px]">
               {/* Day headers */}
               <div className="mb-2 grid grid-cols-7 gap-1">
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
@@ -220,7 +231,7 @@ export default function Client() {
                             }`}
                           >
                             <span className="font-medium">
-                              {PARK_NAMES[h.parkId]?.slice(0, 3) || h.parkId}
+                              {PARK_ABBREVS[h.parkId] || h.parkId}
                             </span>
                             {h.openTime && h.closeTime && (
                               <span className="block">
@@ -239,7 +250,8 @@ export default function Client() {
                   );
                 })}
               </div>
-            </>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

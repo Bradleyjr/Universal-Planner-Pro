@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ParkSelector, type ParkId } from "@/components/park-selector";
 import { FerrisWheel, Search, Zap, Ruler } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface Attraction {
   id: number;
@@ -32,7 +33,10 @@ const PARK_NAMES: Record<string, string> = {
 };
 
 export default function Client() {
-  const [selectedPark, setSelectedPark] = useState<ParkId>("all");
+  const searchParams = useSearchParams();
+  const [selectedPark, setSelectedPark] = useState<ParkId>(
+    () => (searchParams.get("park") as ParkId) || "all"
+  );
   const [attractions, setAttractions] = useState<Attraction[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -65,7 +69,9 @@ export default function Client() {
             Attractions
           </h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {filtered.length} rides, shows, and experiences
+            {loading
+              ? "Rides, shows, and experiences"
+              : `${filtered.length} ride${filtered.length !== 1 ? "s" : ""}, shows, and experiences`}
           </p>
         </div>
         <ParkSelector selected={selectedPark} onChange={setSelectedPark} />
@@ -96,6 +102,17 @@ export default function Client() {
                 No attraction data yet. Run the scraper to populate data.
               </p>
               <code className="mt-2 text-xs text-zinc-400">pnpm scrape</code>
+            </div>
+          </CardContent>
+        </Card>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <Search className="mb-4 h-8 w-8 text-zinc-300" />
+              <p className="text-sm text-zinc-500">
+                No attractions match &ldquo;{search}&rdquo;
+              </p>
             </div>
           </CardContent>
         </Card>

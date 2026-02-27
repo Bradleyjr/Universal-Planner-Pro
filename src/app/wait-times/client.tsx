@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ParkSelector, type ParkId } from "@/components/park-selector";
 import { Timer, Search, CircleDot } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface WaitTime {
   parkId: string;
@@ -44,7 +45,10 @@ function waitBg(minutes: number): string {
 type SortOption = "wait-desc" | "wait-asc" | "name";
 
 export default function Client() {
-  const [selectedPark, setSelectedPark] = useState<ParkId>("all");
+  const searchParams = useSearchParams();
+  const [selectedPark, setSelectedPark] = useState<ParkId>(
+    () => (searchParams.get("park") as ParkId) || "all"
+  );
   const [waitTimes, setWaitTimes] = useState<WaitTime[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -87,12 +91,12 @@ export default function Client() {
       return a.rideName.localeCompare(b.rideName);
     });
 
-  const openCount = waitTimes.filter((w) => w.isOpen).length;
+  const openRides = filtered.filter((w) => w.isOpen);
+  const openCount = openRides.length;
   const avgWait =
     openCount > 0
       ? Math.round(
-          waitTimes.filter((w) => w.isOpen).reduce((sum, w) => sum + w.waitMinutes, 0) /
-            openCount
+          openRides.reduce((sum, w) => sum + w.waitMinutes, 0) / openCount
         )
       : 0;
 
@@ -116,12 +120,12 @@ export default function Client() {
       </div>
 
       {/* Stats */}
-      {!loading && waitTimes.length > 0 && (
+      {!loading && filtered.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           <Card>
             <CardContent className="py-3 text-center">
               <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-                {waitTimes.length}
+                {filtered.length}
               </p>
               <p className="text-xs text-zinc-500">Total Rides</p>
             </CardContent>

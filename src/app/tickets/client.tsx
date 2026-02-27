@@ -114,6 +114,7 @@ export default function Client() {
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7">
               {prices.map((p) => {
                 const adult = parseFloat(p.adultPrice);
+                const child = parseFloat(p.childPrice);
                 return (
                   <div
                     key={p.id}
@@ -125,6 +126,11 @@ export default function Client() {
                     <p className={`text-lg font-bold ${priceColor(adult)}`}>
                       ${adult.toFixed(0)}
                     </p>
+                    {!isNaN(child) && child > 0 && (
+                      <p className="text-[10px] text-zinc-400">
+                        Child ${child.toFixed(0)}
+                      </p>
+                    )}
                     {p.tier && (
                       <Badge variant="secondary" className="mt-1 text-[10px]">
                         {p.tier}

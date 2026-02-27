@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ParkSelector, type ParkId } from "@/components/park-selector";
 import { Utensils, Search, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface DiningVenue {
   id: number;
@@ -44,7 +45,10 @@ const DINING_TYPES = [
 ];
 
 export default function Client() {
-  const [selectedPark, setSelectedPark] = useState<ParkId>("all");
+  const searchParams = useSearchParams();
+  const [selectedPark, setSelectedPark] = useState<ParkId>(
+    () => (searchParams.get("park") as ParkId) || "all"
+  );
   const [selectedType, setSelectedType] = useState("all");
   const [venues, setVenues] = useState<DiningVenue[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +84,9 @@ export default function Client() {
             Dining
           </h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {filtered.length} restaurants, quick service, and food carts
+            {loading
+              ? "Restaurants, quick service, and food carts"
+              : `${filtered.length} restaurant${filtered.length !== 1 ? "s" : ""}, quick service, and food carts`}
           </p>
         </div>
         <ParkSelector selected={selectedPark} onChange={setSelectedPark} />
@@ -130,6 +136,17 @@ export default function Client() {
                 No dining data yet. Run the scraper to populate data.
               </p>
               <code className="mt-2 text-xs text-zinc-400">pnpm scrape</code>
+            </div>
+          </CardContent>
+        </Card>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <Search className="mb-4 h-8 w-8 text-zinc-300" />
+              <p className="text-sm text-zinc-500">
+                No dining venues match &ldquo;{search}&rdquo;
+              </p>
             </div>
           </CardContent>
         </Card>

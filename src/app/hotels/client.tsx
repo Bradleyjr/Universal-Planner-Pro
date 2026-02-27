@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Hotel, Star, Check } from "lucide-react";
+import { Hotel, Star, Check, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface HotelData {
@@ -45,6 +45,7 @@ export default function Client() {
   const [selectedTier, setSelectedTier] = useState("all");
   const [hotels, setHotels] = useState<HotelData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -57,6 +58,12 @@ export default function Client() {
       .catch(() => setHotels([]))
       .finally(() => setLoading(false));
   }, [selectedTier]);
+
+  const filtered = search
+    ? hotels.filter((h) =>
+        h.name.toLowerCase().includes(search.toLowerCase())
+      )
+    : hotels;
 
   return (
     <div className="space-y-6">
@@ -88,11 +95,23 @@ export default function Client() {
         ))}
       </div>
 
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+        <input
+          type="text"
+          placeholder="Search hotels..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-4 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+        />
+      </div>
+
       {loading ? (
         <div className="flex h-64 items-center justify-center">
           <p className="text-sm text-zinc-500">Loading hotels...</p>
         </div>
-      ) : hotels.length === 0 ? (
+      ) : filtered.length === 0 && hotels.length === 0 ? (
         <Card>
           <CardContent className="py-12">
             <div className="flex flex-col items-center justify-center text-center">
@@ -104,9 +123,20 @@ export default function Client() {
             </div>
           </CardContent>
         </Card>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <Search className="mb-4 h-8 w-8 text-zinc-300" />
+              <p className="text-sm text-zinc-500">
+                No hotels match &ldquo;{search}&rdquo;
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {hotels.map((hotel) => (
+          {filtered.map((hotel) => (
             <Card key={hotel.id} className="overflow-hidden">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
