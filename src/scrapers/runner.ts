@@ -1,14 +1,12 @@
 import { closeBrowser } from "./helpers/browser";
+import { isFirecrawlAvailable } from "./helpers/firecrawl";
+import { scrapeTickets } from "./tickets";
+import { scrapeAttractions } from "./attractions";
+import { scrapeDiningData } from "./dining";
+import { scrapeHours } from "./hours";
 import pino from "pino";
 
 const logger = pino({ name: "scrape-runner" });
-
-// Import individual scrapers as they're built:
-// import { scrapeTickets } from "./tickets";
-// import { scrapeAttractions } from "./attractions";
-// import { scrapeDining } from "./dining";
-// import { scrapeHours } from "./hours";
-// import { scrapeHotels } from "./hotels";
 
 interface ScrapeResult {
   scraper: string;
@@ -28,7 +26,7 @@ async function runScraper(
     logger.info({ scraper: name, rows }, "Scraper completed successfully");
     return {
       scraper: name,
-      status: "success",
+      status: rows > 0 ? "success" : "partial",
       rowsUpserted: rows,
       durationMs: Date.now() - start,
     };
@@ -47,33 +45,55 @@ async function runScraper(
 
 async function main() {
   logger.info("Starting scrape run...");
+  logger.info(
+    { firecrawl: isFirecrawlAvailable() },
+    "Firecrawl availability"
+  );
+
   const results: ScrapeResult[] = [];
 
-  // Add scrapers here as they're implemented:
-  // results.push(await runScraper("tickets", scrapeTickets));
-  // results.push(await runScraper("attractions", scrapeAttractions));
-  // results.push(await runScraper("dining", scrapeDining));
-  // results.push(await runScraper("hours", scrapeHours));
-  // results.push(await runScraper("hotels", scrapeHotels));
+  // Run scrapers sequentially to avoid overwhelming the target site
+  results.push(await runScraper("tickets", scrapeTickets));
+  results.push(await runScraper("attractions", scrapeAttractions));
+  results.push(await runScraper("dining", scrapeDiningData));
+  results.push(await runScraper("hours", scrapeHours));
 
-  logger.info("No scrapers implemented yet — this is a skeleton run.");
-
+  // Clean up browser if Playwright was used
   await closeBrowser();
 
   // Summary
+  const succeeded = results.filter((r) => r.status === "success");
+  const partial = results.filter((r) => r.status === "partial");
   const failed = results.filter((r) => r.status === "failed");
-  if (failed.length > 0) {
-    logger.warn(
-      { failed: failed.map((f) => f.scraper) },
-      "Some scrapers failed"
-    );
-    process.exit(1);
-  }
+  const totalRows = results.reduce((a, r) => a + r.rowsUpserted, 0);
 
   logger.info(
-    { totalScrapers: results.length, totalRows: results.reduce((a, r) => a + r.rowsUpserted, 0) },
+    {
+      total: results.length,
+      succeeded: succeeded.length,
+      partial: partial.length,
+      failed: failed.length,
+      totalRows,
+      results: results.map((r) => ({
+        scraper: r.scraper,
+        status: r.status,
+        rows: r.rowsUpserted,
+        duration: `${(r.durationMs / 1000).toFixed(1)}s`,
+      })),
+    },
     "Scrape run complete"
   );
+
+  if (failed.length > 0) {
+    logger.warn(
+      { failed: failed.map((f) => `${f.scraper}: ${f.error}`) },
+      "Some scrapers failed"
+    );
+    // Exit with error if ALL scrapers failed
+    if (failed.length === results.length) {
+      process.exit(1);
+    }
+  }
 }
 
 main().catch((err) => {

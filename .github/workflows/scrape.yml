@@ -24,11 +24,15 @@ jobs:
 
       - run: pnpm install
 
-      - run: pnpm exec playwright install chromium --with-deps
+      # Only install Playwright if Firecrawl key is not set (fallback mode)
+      - name: Install Playwright (fallback)
+        if: ${{ !secrets.FIRECRAWL_API_KEY }}
+        run: pnpm exec playwright install chromium --with-deps
 
       - run: pnpm scrape
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
 
       - name: Notify on failure
         if: failure()
