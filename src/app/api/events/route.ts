@@ -19,21 +19,28 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const sql = neon(process.env.DATABASE_URL);
-  const db = drizzle(sql);
+  try {
+    const sql = neon(process.env.DATABASE_URL);
+    const db = drizzle(sql);
 
-  const conditions = [];
+    const conditions = [];
 
-  if (upcoming === "true") {
-    const today = new Date().toISOString().split("T")[0];
-    conditions.push(gte(events.endDate, today));
+    if (upcoming === "true") {
+      const today = new Date().toISOString().split("T")[0];
+      conditions.push(gte(events.endDate, today));
+    }
+
+    const data = await db
+      .select()
+      .from(events)
+      .where(conditions.length > 0 ? conditions[0] : undefined)
+      .orderBy(asc(events.startDate));
+
+    return NextResponse.json({ data }, { headers: CACHE_HEADERS });
+  } catch {
+    return NextResponse.json(
+      { message: "Failed to fetch events", data: [] },
+      { status: 500, headers: CACHE_HEADERS }
+    );
   }
-
-  const data = await db
-    .select()
-    .from(events)
-    .where(conditions.length > 0 ? conditions[0] : undefined)
-    .orderBy(asc(events.startDate));
-
-  return NextResponse.json({ data }, { headers: CACHE_HEADERS });
 }

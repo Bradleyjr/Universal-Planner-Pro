@@ -6,6 +6,7 @@ import { scrapeDiningData } from "./dining";
 import { scrapeHours } from "./hours";
 import { scrapeHotels } from "./hotels";
 import { scrapeEvents } from "./events";
+import { ensureParksSeeded } from "@/lib/db/seed";
 import pino from "pino";
 
 const logger = pino({ name: "scrape-runner" });
@@ -51,6 +52,10 @@ async function main() {
     { firecrawl: isFirecrawlAvailable() },
     "Firecrawl availability"
   );
+
+  // Ensure parks table is seeded (safe to call repeatedly)
+  await ensureParksSeeded();
+  logger.info("Parks table seeded");
 
   const results: ScrapeResult[] = [];
 

@@ -19,19 +19,26 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const sql = neon(process.env.DATABASE_URL);
-  const db = drizzle(sql);
+  try {
+    const sql = neon(process.env.DATABASE_URL);
+    const db = drizzle(sql);
 
-  const conditions = [];
-  if (tier) {
-    conditions.push(eq(hotels.tier, tier));
+    const conditions = [];
+    if (tier) {
+      conditions.push(eq(hotels.tier, tier));
+    }
+
+    const data = await db
+      .select()
+      .from(hotels)
+      .where(conditions.length > 0 ? conditions[0] : undefined)
+      .orderBy(asc(hotels.name));
+
+    return NextResponse.json({ data }, { headers: CACHE_HEADERS });
+  } catch {
+    return NextResponse.json(
+      { message: "Failed to fetch hotels", data: [] },
+      { status: 500, headers: CACHE_HEADERS }
+    );
   }
-
-  const data = await db
-    .select()
-    .from(hotels)
-    .where(conditions.length > 0 ? conditions[0] : undefined)
-    .orderBy(asc(hotels.name));
-
-  return NextResponse.json({ data }, { headers: CACHE_HEADERS });
 }

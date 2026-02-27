@@ -20,23 +20,30 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const sql = neon(process.env.DATABASE_URL);
-  const db = drizzle(sql);
+  try {
+    const sql = neon(process.env.DATABASE_URL);
+    const db = drizzle(sql);
 
-  const conditions = [];
+    const conditions = [];
 
-  if (park) {
-    conditions.push(eq(dining.parkId, park));
+    if (park) {
+      conditions.push(eq(dining.parkId, park));
+    }
+    if (type) {
+      conditions.push(eq(dining.type, type));
+    }
+
+    const data = await db
+      .select()
+      .from(dining)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(asc(dining.name));
+
+    return NextResponse.json({ data }, { headers: CACHE_HEADERS });
+  } catch {
+    return NextResponse.json(
+      { message: "Failed to fetch dining", data: [] },
+      { status: 500, headers: CACHE_HEADERS }
+    );
   }
-  if (type) {
-    conditions.push(eq(dining.type, type));
-  }
-
-  const data = await db
-    .select()
-    .from(dining)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(asc(dining.name));
-
-  return NextResponse.json({ data }, { headers: CACHE_HEADERS });
 }

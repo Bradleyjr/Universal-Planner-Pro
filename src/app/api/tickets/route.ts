@@ -21,28 +21,35 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const sql = neon(process.env.DATABASE_URL);
-  const db = drizzle(sql);
+  try {
+    const sql = neon(process.env.DATABASE_URL);
+    const db = drizzle(sql);
 
-  // Calculate end date
-  const end = new Date(startDate);
-  end.setDate(end.getDate() + range);
-  const endDate = end.toISOString().split("T")[0];
+    // Calculate end date
+    const end = new Date(startDate);
+    end.setDate(end.getDate() + range);
+    const endDate = end.toISOString().split("T")[0];
 
-  const conditions = [
-    gte(ticketPrices.date, startDate),
-    lte(ticketPrices.date, endDate),
-  ];
+    const conditions = [
+      gte(ticketPrices.date, startDate),
+      lte(ticketPrices.date, endDate),
+    ];
 
-  if (combo) {
-    conditions.push(eq(ticketPrices.parkCombo, combo));
+    if (combo) {
+      conditions.push(eq(ticketPrices.parkCombo, combo));
+    }
+
+    const data = await db
+      .select()
+      .from(ticketPrices)
+      .where(and(...conditions))
+      .orderBy(asc(ticketPrices.date));
+
+    return NextResponse.json({ data }, { headers: CACHE_HEADERS });
+  } catch {
+    return NextResponse.json(
+      { message: "Failed to fetch ticket prices", data: [] },
+      { status: 500, headers: CACHE_HEADERS }
+    );
   }
-
-  const data = await db
-    .select()
-    .from(ticketPrices)
-    .where(and(...conditions))
-    .orderBy(asc(ticketPrices.date));
-
-  return NextResponse.json({ data }, { headers: CACHE_HEADERS });
 }

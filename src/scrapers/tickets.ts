@@ -145,7 +145,9 @@ async function parseTicketHTML(
 
   const sql = neon(process.env.DATABASE_URL);
   const db = drizzle(sql);
-  let count = 0;
+
+  // Collect upsert promises since we can't await inside .each()
+  const upsertPromises: Promise<void>[] = [];
 
   // Look for calendar day elements with pricing data
   $('[data-date], [data-price], [class*="calendar-day"]').each((_, el) => {
@@ -158,7 +160,6 @@ async function parseTicketHTML(
     if (date && priceText) {
       const price = parsePrice(priceText);
       if (price) {
-        // Queue for processing (we'll batch these)
         const parsed = scrapedTicketPrice.safeParse({
           date,
           parkCombo: "1-park",
@@ -167,31 +168,34 @@ async function parseTicketHTML(
         });
 
         if (parsed.success) {
-          // Can't await inside .each(), so we process synchronously and upsert after
-          db.insert(ticketPrices)
-            .values({
-              date: parsed.data.date,
-              parkCombo: parsed.data.parkCombo,
-              tier: parsed.data.tier ?? null,
-              adultPrice: parsed.data.adultPrice.toFixed(2),
-              childPrice: parsed.data.childPrice.toFixed(2),
-            })
-            .onConflictDoUpdate({
-              target: [ticketPrices.date, ticketPrices.parkCombo, ticketPrices.tier],
-              set: {
+          upsertPromises.push(
+            db.insert(ticketPrices)
+              .values({
+                date: parsed.data.date,
+                parkCombo: parsed.data.parkCombo,
+                tier: parsed.data.tier ?? null,
                 adultPrice: parsed.data.adultPrice.toFixed(2),
                 childPrice: parsed.data.childPrice.toFixed(2),
-                scrapedAt: new Date(),
-              },
-            })
-            .then(() => count++)
-            .catch((err) =>
-              logger.warn({ date, err }, "Failed to upsert ticket price")
-            );
+              })
+              .onConflictDoUpdate({
+                target: [ticketPrices.date, ticketPrices.parkCombo, ticketPrices.tier],
+                set: {
+                  adultPrice: parsed.data.adultPrice.toFixed(2),
+                  childPrice: parsed.data.childPrice.toFixed(2),
+                  scrapedAt: new Date(),
+                },
+              })
+              .then(() => {})
+              .catch((err) =>
+                logger.warn({ date, err }, "Failed to upsert ticket price")
+              )
+          );
         }
       }
     }
   });
 
-  return count;
+  // Wait for all DB writes to complete before returning count
+  await Promise.all(upsertPromises);
+  return upsertPromises.length;
 }

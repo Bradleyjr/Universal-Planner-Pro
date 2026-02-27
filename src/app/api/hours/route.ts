@@ -20,29 +20,36 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const sql = neon(process.env.DATABASE_URL);
-  const db = drizzle(sql);
+  try {
+    const sql = neon(process.env.DATABASE_URL);
+    const db = drizzle(sql);
 
-  const conditions = [];
+    const conditions = [];
 
-  if (park) {
-    conditions.push(eq(parkHours.parkId, park));
+    if (park) {
+      conditions.push(eq(parkHours.parkId, park));
+    }
+
+    if (month) {
+      // Parse YYYY-MM to start and end of month
+      const startDate = `${month}-01`;
+      const [year, mon] = month.split("-").map(Number);
+      const endDate = new Date(year, mon, 0).toISOString().split("T")[0];
+      conditions.push(gte(parkHours.date, startDate));
+      conditions.push(lte(parkHours.date, endDate));
+    }
+
+    const data = await db
+      .select()
+      .from(parkHours)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(asc(parkHours.date));
+
+    return NextResponse.json({ data }, { headers: CACHE_HEADERS });
+  } catch {
+    return NextResponse.json(
+      { message: "Failed to fetch park hours", data: [] },
+      { status: 500, headers: CACHE_HEADERS }
+    );
   }
-
-  if (month) {
-    // Parse YYYY-MM to start and end of month
-    const startDate = `${month}-01`;
-    const [year, mon] = month.split("-").map(Number);
-    const endDate = new Date(year, mon, 0).toISOString().split("T")[0];
-    conditions.push(gte(parkHours.date, startDate));
-    conditions.push(lte(parkHours.date, endDate));
-  }
-
-  const data = await db
-    .select()
-    .from(parkHours)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(asc(parkHours.date));
-
-  return NextResponse.json({ data }, { headers: CACHE_HEADERS });
 }

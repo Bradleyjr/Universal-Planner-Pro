@@ -24,10 +24,18 @@ jobs:
 
       - run: pnpm install
 
-      # Only install Playwright if Firecrawl key is not set (fallback mode)
-      - name: Install Playwright (fallback)
-        if: ${{ !secrets.FIRECRAWL_API_KEY }}
+      # Always install Playwright as fallback in case Firecrawl fails
+      - name: Install Playwright
         run: pnpm exec playwright install chromium --with-deps
+
+      - name: Validate secrets
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL secret is not configured"
+            exit 1
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - run: pnpm scrape
         env:

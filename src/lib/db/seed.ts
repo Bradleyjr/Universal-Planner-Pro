@@ -2,32 +2,43 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { parks } from "./schema";
 
+const PARK_DATA = [
+  { id: "usf", name: "Universal Studios Florida", slug: "universal-studios-florida" },
+  { id: "ioa", name: "Islands of Adventure", slug: "islands-of-adventure" },
+  { id: "epic", name: "Epic Universe", slug: "epic-universe" },
+];
+
 /**
- * Seeds the parks table with the three Universal Orlando parks.
- * Run with: tsx src/lib/db/seed.ts
+ * Ensures the parks table has all 3 Universal Orlando parks.
+ * Uses onConflictDoNothing so it's safe to call repeatedly.
+ */
+export async function ensureParksSeeded(): Promise<void> {
+  if (!process.env.DATABASE_URL) return;
+
+  const sql = neon(process.env.DATABASE_URL);
+  const db = drizzle(sql);
+
+  for (const park of PARK_DATA) {
+    await db.insert(parks).values(park).onConflictDoNothing();
+  }
+}
+
+/**
+ * CLI entrypoint: tsx src/lib/db/seed.ts
  */
 async function main() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required");
   }
 
-  const sql = neon(process.env.DATABASE_URL);
-  const db = drizzle(sql);
-
-  const parkData = [
-    { id: "usf", name: "Universal Studios Florida", slug: "universal-studios-florida" },
-    { id: "ioa", name: "Islands of Adventure", slug: "islands-of-adventure" },
-    { id: "epic", name: "Epic Universe", slug: "epic-universe" },
-  ];
-
-  for (const park of parkData) {
-    await db.insert(parks).values(park).onConflictDoNothing();
-  }
-
+  await ensureParksSeeded();
   console.log("Seeded parks table with 3 parks");
 }
 
-main().catch((err) => {
-  console.error("Seed failed:", err);
-  process.exit(1);
-});
+// Only run when executed directly (not imported)
+if (process.argv[1]?.includes("seed")) {
+  main().catch((err) => {
+    console.error("Seed failed:", err);
+    process.exit(1);
+  });
+}
