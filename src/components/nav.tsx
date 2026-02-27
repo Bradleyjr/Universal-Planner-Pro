@@ -10,6 +10,7 @@ import {
   Hotel,
   Calendar,
   LayoutDashboard,
+  Timer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/attractions", label: "Attractions", icon: FerrisWheel },
   { href: "/dining", label: "Dining", icon: Utensils },
   { href: "/hours", label: "Park Hours", icon: Clock },
+  { href: "/wait-times", label: "Wait Times", icon: Timer },
   { href: "/hotels", label: "Hotels", icon: Hotel },
   { href: "/events", label: "Events", icon: Calendar },
 ];
