@@ -8,7 +8,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { FilterGroup } from "@/components/filter-group";
+import { EmptyState } from "@/components/empty-state";
+import { FadeIn, StaggerContainer, StaggerItem, Skeleton } from "@/components/motion";
 import { Ticket } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -22,11 +24,11 @@ interface TicketPrice {
   scrapedAt: string;
 }
 
-const COMBO_LABELS: Record<string, string> = {
-  "1-park": "1-Park",
-  "2-park": "2-Park",
-  "3-park": "3-Park",
-};
+const COMBO_OPTIONS = [
+  { value: "1-park", label: "1-Park" },
+  { value: "2-park", label: "2-Park" },
+  { value: "3-park", label: "3-Park" },
+];
 
 function formatDate(dateStr: string) {
   return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
@@ -37,9 +39,9 @@ function formatDate(dateStr: string) {
 }
 
 function priceColor(price: number): string {
-  if (price < 120) return "text-green-600 dark:text-green-400";
-  if (price < 160) return "text-yellow-600 dark:text-yellow-400";
-  return "text-red-600 dark:text-red-400";
+  if (price < 120) return "text-emerald-600 dark:text-emerald-400";
+  if (price < 160) return "text-amber-600 dark:text-amber-400";
+  return "text-rose-600 dark:text-rose-400";
 }
 
 export default function Client() {
@@ -57,92 +59,85 @@ export default function Client() {
   }, [combo]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Ticket Prices
-          </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Daily ticket pricing for Universal Orlando
-          </p>
+    <div className="space-y-8">
+      <FadeIn>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">
+              Ticket Prices
+            </h1>
+            <p className="mt-1 text-sm text-text-secondary">
+              Daily ticket pricing for Universal Orlando
+            </p>
+          </div>
+          <FilterGroup
+            options={COMBO_OPTIONS}
+            value={combo}
+            onChange={setCombo}
+            activeColor="bg-emerald-500"
+          />
         </div>
-        <div className="flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800/50">
-          {Object.entries(COMBO_LABELS).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setCombo(key)}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                combo === key
-                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-50"
-                  : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+      </FadeIn>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Ticket className="h-4 w-4 text-violet-600" />
-            {COMBO_LABELS[combo] || combo} Ticket Prices — Next 30 Days
-          </CardTitle>
-          <CardDescription>
-            Prices are scraped daily. Green = value, yellow = average, red = peak.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex h-64 items-center justify-center">
-              <p className="text-sm text-zinc-500">Loading prices...</p>
-            </div>
-          ) : prices.length === 0 ? (
-            <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700">
-              <div className="text-center">
-                <p className="text-sm text-zinc-500">
-                  No pricing data yet. Run the scraper to populate data.
-                </p>
-                <code className="mt-2 block text-xs text-zinc-400">
-                  pnpm scrape
-                </code>
+      <FadeIn delay={0.1}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Ticket className="h-4 w-4 text-emerald-500" />
+              {COMBO_OPTIONS.find((o) => o.value === combo)?.label || combo} Ticket
+              Prices — Next 30 Days
+            </CardTitle>
+            <CardDescription>
+              Prices are scraped daily. Green = value, yellow = average, red = peak.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7">
+                {Array.from({ length: 14 }).map((_, i) => (
+                  <Skeleton key={i} className="h-24 w-full" />
+                ))}
               </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7">
-              {prices.map((p) => {
-                const adult = parseFloat(p.adultPrice);
-                const child = parseFloat(p.childPrice);
-                return (
-                  <div
-                    key={p.id}
-                    className="rounded-lg border border-zinc-200 p-2 text-center dark:border-zinc-800"
-                  >
-                    <p className="text-xs text-zinc-500">
-                      {formatDate(p.date)}
-                    </p>
-                    <p className={`text-lg font-bold ${priceColor(adult)}`}>
-                      ${adult.toFixed(0)}
-                    </p>
-                    {!isNaN(child) && child > 0 && (
-                      <p className="text-[10px] text-zinc-400">
-                        Child ${child.toFixed(0)}
-                      </p>
-                    )}
-                    {p.tier && (
-                      <Badge variant="secondary" className="mt-1 text-[10px]">
-                        {p.tier}
-                      </Badge>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            ) : prices.length === 0 ? (
+              <EmptyState
+                icon={Ticket}
+                iconColor="text-emerald-400"
+                title="No pricing data yet"
+                description="Run the scraper to populate ticket pricing data for Universal Orlando."
+              />
+            ) : (
+              <StaggerContainer className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7">
+                {prices.map((p) => {
+                  const adult = parseFloat(p.adultPrice);
+                  const child = parseFloat(p.childPrice);
+                  return (
+                    <StaggerItem key={p.id}>
+                      <div className="rounded-2xl bg-stone-50 p-3 text-center transition-all duration-200 hover:bg-stone-100 dark:bg-stone-800/50 dark:hover:bg-stone-800">
+                        <p className="text-xs font-medium text-text-secondary">
+                          {formatDate(p.date)}
+                        </p>
+                        <p className={`text-lg font-extrabold ${priceColor(adult)}`}>
+                          ${adult.toFixed(0)}
+                        </p>
+                        {!isNaN(child) && child > 0 && (
+                          <p className="text-[10px] text-text-secondary">
+                            Child ${child.toFixed(0)}
+                          </p>
+                        )}
+                        {p.tier && (
+                          <Badge variant="tickets" className="mt-1 text-[10px]">
+                            {p.tier}
+                          </Badge>
+                        )}
+                      </div>
+                    </StaggerItem>
+                  );
+                })}
+              </StaggerContainer>
+            )}
+          </CardContent>
+        </Card>
+      </FadeIn>
     </div>
   );
 }
