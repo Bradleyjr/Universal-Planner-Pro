@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ParkSelector, type ParkId } from "@/components/park-selector";
+import { EmptyState } from "@/components/empty-state";
+import { FadeIn, Skeleton } from "@/components/motion";
 import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -125,36 +127,38 @@ export default function Client() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Park Hours
-          </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Operating hours, early entry, and special events
-          </p>
+    <div className="space-y-8">
+      <FadeIn>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-display text-3xl font-extrabold text-foreground">
+              Park Hours
+            </h1>
+            <p className="mt-1 text-sm text-text-secondary">
+              Operating hours, early entry, and special events
+            </p>
+          </div>
+          <ParkSelector selected={selectedPark} onChange={setSelectedPark} />
         </div>
-        <ParkSelector selected={selectedPark} onChange={setSelectedPark} />
-      </div>
+      </FadeIn>
 
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Clock className="h-4 w-4 text-violet-600" />
+              <Clock className="h-4 w-4 text-violet-500" />
               {monthLabel}
             </CardTitle>
             <div className="flex gap-1">
               <button
                 onClick={prevMonth}
-                className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="rounded-xl p-1.5 text-text-secondary hover:bg-stone-100 dark:hover:bg-stone-800"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={nextMonth}
-                className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="rounded-xl p-1.5 text-text-secondary hover:bg-stone-100 dark:hover:bg-stone-800"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -168,25 +172,25 @@ export default function Client() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex h-64 items-center justify-center">
-              <p className="text-sm text-zinc-500">Loading hours...</p>
+            <div className="grid grid-cols-7 gap-1">
+              {Array.from({ length: 35 }).map((_, i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
             </div>
           ) : hours.length === 0 ? (
-            <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700">
-              <div className="text-center">
-                <p className="text-sm text-zinc-500">
-                  No hours data for this month. Run the scraper to populate data.
-                </p>
-                <code className="mt-2 block text-xs text-zinc-400">pnpm scrape</code>
-              </div>
-            </div>
+            <EmptyState
+              icon={Clock}
+              iconColor="text-violet-400"
+              title="No hours data"
+              description="No hours data for this month. Run the scraper to populate data."
+            />
           ) : (
             <div className="-mx-2 overflow-x-auto px-2 sm:mx-0 sm:px-0">
               <div className="min-w-[600px]">
               {/* Day headers */}
               <div className="mb-2 grid grid-cols-7 gap-1">
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                  <div key={d} className="py-1 text-center text-xs font-medium text-zinc-500">
+                  <div key={d} className="py-1 text-center text-xs font-medium text-text-secondary">
                     {d}
                   </div>
                 ))}
@@ -210,14 +214,14 @@ export default function Client() {
                       className={`min-h-[80px] rounded-lg border p-1.5 ${
                         isToday
                           ? "border-violet-300 bg-violet-50/50 dark:border-violet-700 dark:bg-violet-950/20"
-                          : "border-zinc-200 dark:border-zinc-800"
+                          : "border-stone-200 dark:border-stone-800"
                       }`}
                     >
                       <p
                         className={`text-xs font-medium ${
                           isToday
                             ? "text-violet-700 dark:text-violet-400"
-                            : "text-zinc-500"
+                            : "text-text-secondary"
                         }`}
                       >
                         {day.getDate()}
@@ -227,7 +231,7 @@ export default function Client() {
                           <div
                             key={h.id}
                             className={`rounded px-1 py-0.5 text-[10px] leading-tight ${
-                              PARK_COLORS[h.parkId] || "bg-zinc-100 text-zinc-700"
+                              PARK_COLORS[h.parkId] || "bg-stone-100 text-stone-700"
                             }`}
                           >
                             <span className="font-medium">

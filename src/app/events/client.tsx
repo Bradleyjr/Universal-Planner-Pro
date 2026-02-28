@@ -8,6 +8,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { FilterGroup } from "@/components/filter-group";
+import { EmptyState } from "@/components/empty-state";
+import { FadeIn, StaggerContainer, StaggerItem, Skeleton } from "@/components/motion";
 import { Calendar, PartyPopper } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -41,6 +44,12 @@ function isUpcoming(event: EventData): boolean {
   return event.startDate > today;
 }
 
+const FILTER_OPTIONS = [
+  { value: "all", label: "All Events" },
+  { value: "active", label: "Happening Now" },
+  { value: "upcoming", label: "Upcoming" },
+];
+
 export default function Client() {
   const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,103 +71,90 @@ export default function Client() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Events
-          </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Halloween Horror Nights, Mardi Gras, Holidays, and special event pricing
-          </p>
+    <div className="space-y-8">
+      <FadeIn>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-display text-3xl font-extrabold text-foreground">
+              Events
+            </h1>
+            <p className="text-sm text-text-secondary">
+              Halloween Horror Nights, Mardi Gras, Holidays, and special event pricing
+            </p>
+          </div>
         </div>
-      </div>
+      </FadeIn>
 
       {/* Filter */}
-      <div className="flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800/50">
-        {[
-          { id: "all" as const, label: "All Events" },
-          { id: "active" as const, label: "Happening Now" },
-          { id: "upcoming" as const, label: "Upcoming" },
-        ].map((opt) => (
-          <button
-            key={opt.id}
-            onClick={() => setFilter(opt.id)}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              filter === opt.id
-                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-50"
-                : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
+      <FadeIn delay={0.05}>
+        <FilterGroup
+          options={FILTER_OPTIONS}
+          value={filter}
+          onChange={(v) => setFilter(v as "all" | "active" | "upcoming")}
+          activeColor="bg-fuchsia-500"
+          layoutId="event-filter"
+        />
+      </FadeIn>
 
       {loading ? (
-        <div className="flex h-64 items-center justify-center">
-          <p className="text-sm text-zinc-500">Loading events...</p>
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
         </div>
       ) : filtered.length === 0 && events.length === 0 ? (
-        <Card>
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center justify-center text-center">
-              <Calendar className="mb-4 h-8 w-8 text-zinc-300" />
-              <p className="text-sm text-zinc-500">
-                No event data yet. Run the scraper to populate data.
-              </p>
-              <code className="mt-2 text-xs text-zinc-400">pnpm scrape</code>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Calendar}
+          iconColor="text-fuchsia-400"
+          title="No event data"
+          description="No event data yet. Run the scraper to populate data."
+        />
       ) : filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center justify-center text-center">
-              <PartyPopper className="mb-4 h-8 w-8 text-zinc-300" />
-              <p className="text-sm text-zinc-500">
-                No events match this filter.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={PartyPopper}
+          iconColor="text-fuchsia-300"
+          title="No matching events"
+          description="No events match this filter."
+        />
       ) : (
-        <div className="space-y-3">
+        <StaggerContainer className="space-y-3">
           {filtered.map((event) => {
             const active = isActive(event);
             const upcoming = isUpcoming(event);
 
             return (
-              <Card key={event.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-base">{event.name}</CardTitle>
-                    {active && (
-                      <Badge className="shrink-0 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                        Happening Now
-                      </Badge>
-                    )}
-                    {upcoming && (
-                      <Badge variant="secondary" className="shrink-0">
-                        Upcoming
-                      </Badge>
-                    )}
-                  </div>
-                  <CardDescription>
-                    {formatDate(event.startDate)} — {formatDate(event.endDate)}
-                  </CardDescription>
-                </CardHeader>
-                {event.description && (
-                  <CardContent>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {event.description}
-                    </p>
-                  </CardContent>
-                )}
-              </Card>
+              <StaggerItem key={event.id}>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-base">{event.name}</CardTitle>
+                      {active && (
+                        <Badge className="shrink-0 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          Happening Now
+                        </Badge>
+                      )}
+                      {upcoming && (
+                        <Badge variant="secondary" className="shrink-0">
+                          Upcoming
+                        </Badge>
+                      )}
+                    </div>
+                    <CardDescription>
+                      {formatDate(event.startDate)} — {formatDate(event.endDate)}
+                    </CardDescription>
+                  </CardHeader>
+                  {event.description && (
+                    <CardContent>
+                      <p className="text-sm text-text-secondary">
+                        {event.description}
+                      </p>
+                    </CardContent>
+                  )}
+                </Card>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerContainer>
       )}
     </div>
   );

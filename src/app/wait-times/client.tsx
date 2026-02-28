@@ -9,7 +9,11 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ParkSelector, type ParkId } from "@/components/park-selector";
-import { Timer, Search, CircleDot } from "lucide-react";
+import { FilterGroup } from "@/components/filter-group";
+import { SearchInput } from "@/components/search-input";
+import { EmptyState } from "@/components/empty-state";
+import { FadeIn, StaggerContainer, StaggerItem, Skeleton } from "@/components/motion";
+import { Timer, CircleDot } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -101,140 +105,133 @@ export default function Client() {
       : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Wait Times
-          </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Live ride wait times from Queue-Times.com
-            {lastFetch && (
-              <span className="ml-1 text-zinc-400">
-                · Updated {lastFetch.toLocaleTimeString()}
-              </span>
-            )}
-          </p>
+    <div className="space-y-8">
+      <FadeIn>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-display text-3xl font-extrabold text-foreground">
+              Wait Times
+            </h1>
+            <p className="text-sm text-text-secondary">
+              Live ride wait times from Queue-Times.com
+              {lastFetch && (
+                <span className="ml-1 text-text-secondary">
+                  · Updated {lastFetch.toLocaleTimeString()}
+                </span>
+              )}
+            </p>
+          </div>
+          <ParkSelector selected={selectedPark} onChange={setSelectedPark} />
         </div>
-        <ParkSelector selected={selectedPark} onChange={setSelectedPark} />
-      </div>
+      </FadeIn>
 
       {/* Stats */}
       {!loading && filtered.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
-          <Card>
-            <CardContent className="py-3 text-center">
-              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-                {filtered.length}
-              </p>
-              <p className="text-xs text-zinc-500">Total Rides</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="py-3 text-center">
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {openCount}
-              </p>
-              <p className="text-xs text-zinc-500">Open Now</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="py-3 text-center">
-              <p className={`text-2xl font-bold ${waitColor(avgWait)}`}>
-                {avgWait}m
-              </p>
-              <p className="text-xs text-zinc-500">Avg Wait</p>
-            </CardContent>
-          </Card>
-        </div>
+        <FadeIn delay={0.05}>
+          <div className="grid grid-cols-3 gap-3">
+            <Card>
+              <CardContent className="py-3 text-center">
+                <p className="font-display text-2xl font-extrabold text-foreground">
+                  {filtered.length}
+                </p>
+                <p className="text-xs text-text-secondary">Total Rides</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-3 text-center">
+                <p className="font-display text-2xl font-extrabold text-green-600 dark:text-green-400">
+                  {openCount}
+                </p>
+                <p className="text-xs text-text-secondary">Open Now</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-3 text-center">
+                <p className={`font-display text-2xl font-extrabold ${waitColor(avgWait)}`}>
+                  {avgWait}m
+                </p>
+                <p className="text-xs text-text-secondary">Avg Wait</p>
+              </CardContent>
+            </Card>
+          </div>
+        </FadeIn>
       )}
 
       {/* Controls */}
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-          <input
-            type="text"
+      <FadeIn delay={0.1}>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <SearchInput
             placeholder="Search rides..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-4 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+            onChange={setSearch}
+            className="flex-1"
+          />
+          <FilterGroup
+            options={[
+              { value: "wait-desc", label: "Longest" },
+              { value: "wait-asc", label: "Shortest" },
+              { value: "name", label: "A-Z" },
+            ]}
+            value={sort}
+            onChange={(v) => setSort(v as SortOption)}
+            activeColor="bg-rose-500"
+            layoutId="wait-sort"
           />
         </div>
-        <div className="flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800/50">
-          {[
-            { id: "wait-desc" as const, label: "Longest" },
-            { id: "wait-asc" as const, label: "Shortest" },
-            { id: "name" as const, label: "A-Z" },
-          ].map((opt) => (
-            <button
-              key={opt.id}
-              onClick={() => setSort(opt.id)}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                sort === opt.id
-                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-50"
-                  : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      </FadeIn>
 
       {loading ? (
-        <div className="flex h-64 items-center justify-center">
-          <p className="text-sm text-zinc-500">Loading wait times...</p>
-        </div>
-      ) : waitTimes.length === 0 ? (
-        <Card>
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center justify-center text-center">
-              <Timer className="mb-4 h-8 w-8 text-zinc-300" />
-              <p className="text-sm text-zinc-500">
-                Wait time data is unavailable right now. The parks may be closed.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
         <div className="space-y-2">
-          {filtered.map((wt) => (
-            <div
-              key={`${wt.parkId}-${wt.rideName}`}
-              className={`flex items-center justify-between rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-800 ${
-                !wt.isOpen ? "opacity-50" : ""
-              }`}
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                  {wt.rideName}
-                </p>
-                <p className="text-xs text-zinc-500">
-                  {PARK_NAMES[wt.parkId] || wt.parkId} · {wt.land}
-                </p>
-              </div>
-              <div className="ml-4 flex items-center gap-2">
-                {wt.isOpen ? (
-                  <div
-                    className={`rounded-lg px-3 py-1.5 text-center ${waitBg(wt.waitMinutes)}`}
-                  >
-                    <span className={`text-lg font-bold ${waitColor(wt.waitMinutes)}`}>
-                      {wt.waitMinutes}
-                    </span>
-                    <span className={`ml-0.5 text-xs ${waitColor(wt.waitMinutes)}`}>
-                      min
-                    </span>
-                  </div>
-                ) : (
-                  <Badge variant="secondary" className="text-xs">
-                    Closed
-                  </Badge>
-                )}
-              </div>
-            </div>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
           ))}
         </div>
+      ) : waitTimes.length === 0 ? (
+        <EmptyState
+          icon={Timer}
+          iconColor="text-rose-400"
+          title="No wait time data"
+          description="Wait time data is unavailable right now. The parks may be closed."
+        />
+      ) : (
+        <StaggerContainer className="space-y-2">
+          {filtered.map((wt) => (
+            <StaggerItem key={`${wt.parkId}-${wt.rideName}`}>
+              <div
+                className={`flex items-center justify-between rounded-2xl bg-surface px-4 py-3 shadow-warm-sm ${
+                  !wt.isOpen ? "opacity-50" : ""
+                }`}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {wt.rideName}
+                  </p>
+                  <p className="text-xs text-text-secondary">
+                    {PARK_NAMES[wt.parkId] || wt.parkId} · {wt.land}
+                  </p>
+                </div>
+                <div className="ml-4 flex items-center gap-2">
+                  {wt.isOpen ? (
+                    <div
+                      className={`rounded-lg px-3 py-1.5 text-center ${waitBg(wt.waitMinutes)}`}
+                    >
+                      <span className={`text-lg font-bold ${waitColor(wt.waitMinutes)}`}>
+                        {wt.waitMinutes}
+                      </span>
+                      <span className={`ml-0.5 text-xs ${waitColor(wt.waitMinutes)}`}>
+                        min
+                      </span>
+                    </div>
+                  ) : (
+                    <Badge variant="secondary" className="text-xs">
+                      Closed
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </StaggerItem>
+          ))}
+        </StaggerContainer>
       )}
     </div>
   );
