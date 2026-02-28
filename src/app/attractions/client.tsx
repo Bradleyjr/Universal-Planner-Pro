@@ -9,6 +9,14 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ParkSelector, type ParkId } from "@/components/park-selector";
+import { SearchInput } from "@/components/search-input";
+import { EmptyState } from "@/components/empty-state";
+import {
+  FadeIn,
+  StaggerContainer,
+  StaggerItem,
+  Skeleton,
+} from "@/components/motion";
 import { FerrisWheel, Search, Zap, Ruler } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -62,104 +70,98 @@ export default function Client() {
     : attractions;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Attractions
-          </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {loading
-              ? "Rides, shows, and experiences"
-              : `${filtered.length} ride${filtered.length !== 1 ? "s" : ""}, shows, and experiences`}
-          </p>
+    <div className="space-y-8">
+      <FadeIn>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">
+              Attractions
+            </h1>
+            <p className="mt-1 text-sm text-text-secondary">
+              {loading
+                ? "Rides, shows, and experiences"
+                : `${filtered.length} ride${filtered.length !== 1 ? "s" : ""}, shows, and experiences`}
+            </p>
+          </div>
+          <ParkSelector selected={selectedPark} onChange={setSelectedPark} />
         </div>
-        <ParkSelector selected={selectedPark} onChange={setSelectedPark} />
-      </div>
+      </FadeIn>
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-        <input
-          type="text"
-          placeholder="Search attractions..."
+      <FadeIn delay={0.05}>
+        <SearchInput
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-4 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+          onChange={setSearch}
+          placeholder="Search attractions..."
         />
-      </div>
+      </FadeIn>
 
       {loading ? (
-        <div className="flex h-64 items-center justify-center">
-          <p className="text-sm text-zinc-500">Loading attractions...</p>
-        </div>
-      ) : filtered.length === 0 && attractions.length === 0 ? (
-        <Card>
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center justify-center text-center">
-              <FerrisWheel className="mb-4 h-8 w-8 text-zinc-300" />
-              <p className="text-sm text-zinc-500">
-                No attraction data yet. Run the scraper to populate data.
-              </p>
-              <code className="mt-2 text-xs text-zinc-400">pnpm scrape</code>
-            </div>
-          </CardContent>
-        </Card>
-      ) : filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center justify-center text-center">
-              <Search className="mb-4 h-8 w-8 text-zinc-300" />
-              <p className="text-sm text-zinc-500">
-                No attractions match &ldquo;{search}&rdquo;
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((attraction) => (
-            <Card key={attraction.id} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-sm leading-tight">
-                    {attraction.name}
-                  </CardTitle>
-                  {attraction.type && (
-                    <Badge variant="secondary" className="shrink-0 text-[10px]">
-                      {attraction.type}
-                    </Badge>
-                  )}
-                </div>
-                <CardDescription className="text-xs">
-                  {PARK_NAMES[attraction.parkId] || attraction.parkId}
-                  {attraction.area && ` · ${attraction.area}`}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {attraction.expressEligible && (
-                    <div className="flex items-center gap-1 rounded-md bg-yellow-50 px-2 py-0.5 text-xs text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
-                      <Zap className="h-3 w-3" />
-                      Express
-                    </div>
-                  )}
-                  {attraction.heightReqIn && (
-                    <div className="flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-                      <Ruler className="h-3 w-3" />
-                      {attraction.heightReqIn}&quot; min
-                    </div>
-                  )}
-                </div>
-                {attraction.description && (
-                  <p className="mt-2 line-clamp-2 text-xs text-zinc-500">
-                    {attraction.description}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full" />
           ))}
         </div>
+      ) : filtered.length === 0 && attractions.length === 0 ? (
+        <EmptyState
+          icon={FerrisWheel}
+          iconColor="text-sky-400"
+          title="No attraction data yet"
+          description="Run the scraper to populate data. Use: pnpm scrape"
+        />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={Search}
+          iconColor="text-sky-400"
+          title="No results found"
+          description={`No attractions match \u201c${search}\u201d`}
+        />
+      ) : (
+        <StaggerContainer className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((attraction) => (
+            <StaggerItem key={attraction.id}>
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-sm leading-tight">
+                      {attraction.name}
+                    </CardTitle>
+                    {attraction.type && (
+                      <Badge variant="attractions" className="shrink-0 text-[10px]">
+                        {attraction.type}
+                      </Badge>
+                    )}
+                  </div>
+                  <CardDescription className="text-xs">
+                    {PARK_NAMES[attraction.parkId] || attraction.parkId}
+                    {attraction.area && ` · ${attraction.area}`}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {attraction.expressEligible && (
+                      <div className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                        <Zap className="h-3 w-3" />
+                        Express
+                      </div>
+                    )}
+                    {attraction.heightReqIn && (
+                      <div className="flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                        <Ruler className="h-3 w-3" />
+                        {attraction.heightReqIn}&quot; min
+                      </div>
+                    )}
+                  </div>
+                  {attraction.description && (
+                    <p className="mt-2 line-clamp-2 text-xs text-text-secondary">
+                      {attraction.description}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </StaggerItem>
+          ))}
+        </StaggerContainer>
       )}
     </div>
   );
