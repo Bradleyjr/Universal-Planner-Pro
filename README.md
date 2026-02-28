@@ -1,43 +1,77 @@
-# Universal-Planner-Pro
-# Universal Orlando API
+# Universal Planner Pro
 
-A fully custom API that scrapes Universal Orlando’s public website and normalizes
-the data into a clean JSON API. It serves all available and scrapable data from Universal Orlando in a beautiful and clean dashboard interface.
+A polished dashboard and API for tracking Universal Orlando ticket prices, park hours, attractions, dining, hotels, and special events. Data is scraped daily and served through a clean Next.js app.
 
 ## Features
-- Ticket & Express dynamic daily pricing
-- Event & holiday pricing (Grinch Breakfast, HHN, Holidays, Mardi Gras)
-- Attraction metadata (height, accessibility, express eligibility)
+
+- Ticket & Express Pass dynamic daily pricing
+- Event & holiday pricing (HHN, Mardi Gras, Holidays, Grinch Breakfast)
+- Attraction metadata (height requirements, accessibility, Express eligibility)
 - Dining database with menu links
-- Park hours
-- Daily scraping cron jobs
-- Clean REST API for consumption
+- Hotel pricing comparison by tier
+- Park hours with early entry and event schedules
+- Daily scraping via GitHub Actions
+- REST API with caching headers
+- Responsive dashboard with dark mode
 
 ## Tech Stack
-- Node.js + TypeScript
-- Express
-- PostgreSQL (Supabase/Neon recommended)
-- Playwright for scraping dynamic content
-- Redis caching (optional)
-- Dockerized for easy deployment
+
+- **Framework:** Next.js 15 (App Router, SSR)
+- **Language:** TypeScript
+- **Database:** PostgreSQL via Neon (serverless)
+- **ORM:** Drizzle ORM
+- **Scraping:** Cheerio (static) + Playwright (dynamic)
+- **Styling:** Tailwind CSS v4 + shadcn/ui components
+- **Validation:** Zod
+- **Scheduling:** GitHub Actions cron
+- **Hosting:** Vercel (free tier)
 
 ## Setup
 
-Copy `.env.example` → `.env`
+```bash
+cp .env.example .env
+# Edit .env with your Neon database URL
 
-```
 pnpm install
-pnpm build
-pnpm dev
+pnpm db:push        # push schema to database
+pnpm dev             # start dev server
 ```
 
 ## Scripts
 
-```
-pnpm scrape     # run all scrapers
-pnpm migrate    # run database migrations
-pnpm start      # run in production mode
+```bash
+pnpm dev             # start dev server (Turbopack)
+pnpm build           # production build
+pnpm start           # run production server
+pnpm lint            # run ESLint
+pnpm scrape          # run all scrapers
+pnpm db:generate     # generate migration files
+pnpm db:migrate      # run migrations
+pnpm db:push         # push schema directly to DB
+pnpm db:studio       # open Drizzle Studio (DB browser)
 ```
 
-## Folder Docs
-See `/docs` for detailed architecture, schema, endpoint map, and scraper instructions.
+## Project Structure
+
+```
+src/
+├── app/                 # Next.js App Router (pages + API routes)
+│   ├── api/             # REST API endpoints
+│   ├── tickets/         # Ticket pricing page
+│   ├── attractions/     # Attractions listing
+│   ├── dining/          # Dining listings
+│   ├── hours/           # Park hours calendar
+│   ├── hotels/          # Hotel pricing
+│   └── events/          # Special events
+├── components/          # React components
+│   └── ui/              # Base UI components (button, card, badge)
+├── lib/                 # Shared utilities
+│   ├── db/              # Drizzle schema + client
+│   └── validators/      # Zod schemas for scraped data
+└── scrapers/            # Scraping logic
+    └── helpers/         # Browser setup + parsing utils
+```
+
+## Docs
+
+See [`/docs`](./docs/) for the full implementation plan, database schema, and architecture.
