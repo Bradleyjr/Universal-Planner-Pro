@@ -1,21 +1,46 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-nunito);
+
+  /* Base colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-border: var(--border-color);
+  --color-text-secondary: var(--text-secondary);
+
+  /* Section accent colors */
+  --color-accent-tickets: #10B981;
+  --color-accent-attractions: #0EA5E9;
+  --color-accent-dining: #F97316;
+  --color-accent-hours: #8B5CF6;
+  --color-accent-wait-times: #F43F5E;
+  --color-accent-hotels: #F59E0B;
+  --color-accent-events: #D946EF;
+
+  /* Warm shadow color */
+  --shadow-color: 28 25 23;
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #09090b;
+  --background: #FDFBF7;
+  --foreground: #1C1917;
+  --surface: #FFFFFF;
+  --border-color: #E7E5E4;
+  --text-secondary: #78716C;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #09090b;
-    --foreground: #fafafa;
+    --background: #0C0A09;
+    --foreground: #F5F5F4;
+    --surface: #1C1917;
+    --border-color: #292524;
+    --text-secondary: #A8A29E;
   }
 }
 
@@ -23,4 +48,31 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Warm shadows utility */
+.shadow-warm-sm {
+  box-shadow: 0 1px 2px 0 rgb(var(--shadow-color) / 0.04);
+}
+.shadow-warm {
+  box-shadow: 0 1px 3px 0 rgb(var(--shadow-color) / 0.06), 0 1px 2px -1px rgb(var(--shadow-color) / 0.06);
+}
+.shadow-warm-md {
+  box-shadow: 0 4px 6px -1px rgb(var(--shadow-color) / 0.06), 0 2px 4px -2px rgb(var(--shadow-color) / 0.06);
+}
+.shadow-warm-lg {
+  box-shadow: 0 10px 15px -3px rgb(var(--shadow-color) / 0.06), 0 4px 6px -4px rgb(var(--shadow-color) / 0.06);
+}
+
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--border-color) 25%, var(--surface) 50%, var(--border-color) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+  border-radius: 0.5rem;
 }
