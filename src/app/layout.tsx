@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Nunito } from "next/font/google";
 import { Nav } from "@/components/nav";
 import "./globals.css";
 
@@ -13,6 +14,12 @@ const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+});
+
+const nunito = Nunito({
+  subsets: ["latin"],
+  variable: "--font-nunito",
+  weight: ["400", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -53,7 +60,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} antialiased`}
       >
         <Nav />
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
